@@ -1,6 +1,8 @@
 """Эта программа рисует красивые картинки.
-   На данный момент она может нарисовать далеких птиц и
-   глаз, плавник рыбы
+На данный момент программа закончена. 
+Она рисует рыб, далеких и ближних птиц, пейзаж.
+Программа показывает сначала классную работу, а при попытке закрытия переходит на домашнюю.
+Для закрытия нажмите на закрытие 4 раза.
 """
 
 
@@ -13,6 +15,12 @@ from pygame.draw import *
 #--------------- LITTLE Bird ----------
 
 def draw_little_bird(x_little_bird, y_little_bird, size_of_little_bird, angle_of_little_bird):
+    """ Функция рисует дальнюю птицу. 
+    x_little_bird, y_little_bird - Указываются координаты верхнего угла рисунка с птицей.
+    size_of_little_bird - размер рисунка в пикселях
+    angle_of_little_bird - наклон птицы влево в градусах.
+    Ничего не возвращает.
+    """
     bird_surface = pygame.Surface((size_of_little_bird*2, size_of_little_bird), pygame.SRCALPHA)
     bird_surface.fill((0, 0, 0, 0))
     arc(bird_surface, (255, 255, 255), 
@@ -27,6 +35,12 @@ def draw_little_bird(x_little_bird, y_little_bird, size_of_little_bird, angle_of
 # ------------- FISH -----------
 
 def fishs_fin(fin_size, fin_tetta, fin_flip_bool):
+    """Возвращает surface плавника рыбы.
+    fin_size - размер плавника,
+    fin_tetta - поворот плавника на угол в градусах в положительном направлении,
+    fin_flip_bool - отражение плавника относительно вертикали.
+    Возвращает surface.
+    """
     fish_fin_surface = pygame.Surface((200, 200), pygame.SRCALPHA)
     fish_fin_surface.fill((0, 0, 0, 0))
     massive_fish_fin=[(120, 180), (130, 165), (137, 150), (142, 135),
@@ -47,6 +61,10 @@ def fishs_fin(fin_size, fin_tetta, fin_flip_bool):
     )
 
 def fishs_eye(fish_eye_scale):
+    """Возвращает surface глаза рыбы заданным образом.
+    fish_eye_scale - масштаб глаза.
+    Возвращает surface.
+    """
     fish_eye_surface = pygame.Surface((200, 200), pygame.SRCALPHA)
     fish_eye_surface.fill((0, 0, 0, 0))
     fish_eye_blic_surface = pygame.Surface((100, 100), pygame.SRCALPHA)
@@ -61,6 +79,11 @@ def fishs_eye(fish_eye_scale):
     )
 
 def draw_fish(x_fish, y_fish, size_of_fish):
+    """Рисует рыбу на экране.
+    x_fish, y_fish - координаты верхнего левого угла, 
+    size_of_fish - размер рыбы.
+    Ничего не возвращает.
+    """
     fish_surface = pygame.Surface((200, 200), pygame.SRCALPHA)
     fish_surface.fill((0, 0, 0, 0))
     fish_surface.blit(fishs_fin(70, -5, 0), (80, 50))
@@ -89,6 +112,11 @@ def draw_fish(x_fish, y_fish, size_of_fish):
 #-------------- Big Bird ------------------
 
 def birds_beak(beak_size, beak_flap_bool):
+    """Возвращает surface клюва.
+    beak_size - размер клюва, 
+    beak_flap_bool - переворот клюва относительно горизонтальной оси.
+    Возвращает surface. 
+    """
     bird_beak_surface = pygame.Surface((200, 200), pygame.SRCALPHA)
     bird_beak_surface.fill((0, 0, 0, 0))
     massive_beak=[(50, 90), (70, 91), (100, 92), (115, 91), (120, 90), (130, 88), (140, 85),
@@ -103,6 +131,11 @@ def birds_beak(beak_size, beak_flap_bool):
         ), (beak_size, beak_size))
 
 def draw_oval(x_long, y_short , tetta_rotat):
+    """Функция возвращает surface с изображением эллипса заданного размера белого цвета.
+    Эллипс повернут относительно осей на угол tetta_rotat против часовой стрелки.
+    x_long, y_short - длина и ширина эллипса соответственно.
+    Возвращает surface. 
+    """
     Oval_surf = pygame.Surface((200, 200), pygame.SRCALPHA)
     Oval_surf.fill((0, 0, 0, 0))    
     ellipse(Oval_surf, (250, 250, 250), [100 - x_long/2, 100 - y_short/2, x_long, y_short])
@@ -111,6 +144,10 @@ def draw_oval(x_long, y_short , tetta_rotat):
         )   
 
 def bird_claw(claw_size):
+    """Возвращает surface когтей.
+    claw_size - размер когтей.
+    Возвращает surface. 
+    """
     bird_claw_surface = pygame.Surface((400, 400), pygame.SRCALPHA)
     bird_claw_surface.fill((0, 0, 0, 0))
     massive_claw=[(52, 190), (50, 200),(49, 210), (50, 280), (88, 173), (90, 171), (94, 166), (150, 140),
@@ -127,6 +164,10 @@ def bird_claw(claw_size):
     )    
 
 def bird_leg(leg_size):
+    """Возвращает surface ноги.
+    leg_size - размер ноги. 
+    Возвращает surface. 
+    """
     bird_leg_surface = pygame.Surface((400, 400), pygame.SRCALPHA)
     bird_leg_surface.fill((0, 0, 0, 0))   
     bird_leg_surface.blit(bird_claw(120),(220,155)) 
@@ -137,6 +178,11 @@ def bird_leg(leg_size):
         )    
 
 def bird_wing(wing_size, wing_tetta):
+    """Возвращает surface крыла.
+    wing_size - размер крыла,
+    wing_tetta - поворот крыла на угол в градусах в положительном направлении.
+    Возвращает surface. 
+    """
     bird_wing_surface = pygame.Surface((400, 400), pygame.SRCALPHA)
     bird_wing_surface.fill((0, 0, 0, 0))
     massive_wing=[(360, 320), (358, 300), (350, 250), (340, 227), (330, 210),
@@ -156,6 +202,11 @@ def bird_wing(wing_size, wing_tetta):
     )    
 
 def bird_tale(tale_size, tale_tetta):
+    """Возвращает surface хвоста.
+    tale_size - размер хвоста,
+    tale_tetta - поворот хвоста на угол в градусах в положительном направлении.
+    Возвращает surface. 
+    """
     bird_tale_surface = pygame.Surface((400, 400), pygame.SRCALPHA)
     bird_tale_surface.fill((0, 0, 0, 0))
     massive_tale=[(320, 230), (280, 200), (240, 165), (200, 120), (155, 35), (152, 30), (150, 29), (148, 30), (145, 33), 
@@ -171,7 +222,13 @@ def bird_tale(tale_size, tale_tetta):
     ) 
     pass
 
-def draw_bird(x_bird, y_bird, size_of_bird, bird_flit_bool):
+def draw_bird(x_bird, y_bird, size_of_bird, bird_flip_bool):
+    """Функция рисует на экране птицу.
+    x_bird, y_bird - координаты верхнего левого угла изображения, 
+    size_of_bird - размер птицы,
+    bird_flip_bool - Переменная разворота птицы.
+    Ничего не возвращает.
+    """
     bird_surface = pygame.Surface((800, 800), pygame.SRCALPHA)
     bird_surface.fill((0, 0, 0, 0))
     bird_surface.blit(bird_tale(200, 0), (135,272))
@@ -188,14 +245,17 @@ def draw_bird(x_bird, y_bird, size_of_bird, bird_flit_bool):
     ellipse(bird_surface, (0, 0, 0), [606, 356, 10, 10])
     screen.blit(pygame.transform.scale(
         pygame.transform.flip(
-            bird_surface, bird_flit_bool, 0
+            bird_surface, bird_flip_bool, 0
         ), (size_of_bird, size_of_bird)), 
         (x_bird, y_bird)
     )
+    return 
 
 #------------------- draw -------------
 
 def draw_background():
+    """ Отрисовка заднего плана из условия.
+    """
     rect(screen, (33, 33, 120), (0,0, 600 , 80))
     rect(screen, (141, 95, 211), (0, 80, 600,40))
     rect(screen, (205, 135, 222), (0, 120, 600,70))
@@ -204,6 +264,8 @@ def draw_background():
     rect(screen, (0, 102, 128), (0, 370, 600,360))
 
 def draw_picture1():
+    """ Выполнение первой части - классная работа.
+    """
     draw_background()
     draw_bird(0,280,500,0)
     draw_fish(250, 560, 200)
@@ -212,6 +274,8 @@ def draw_picture1():
     draw_little_bird(130, 200, 150, -15)
 
 def draw_picture2():
+    """ Выполнение второй части - домашняя работа.
+    """
     draw_background()
     for i in range(10):
         draw_little_bird(random.randint(0,500), random.randint(0,300), 50, random.randint(-15, 15))
@@ -224,8 +288,11 @@ def draw_picture2():
     draw_little_bird(120, -10, 150, 15)
     draw_little_bird(300, 140, 150, 0)
     draw_little_bird(130, 200, 150, -15)
-# -------------------- main ---------------
 
+# -------------------- main ---------------
+""" Программа показывает сначала классную работу, а при попытке закрытия переходит на домашнюю.
+Для закрытия нажмите на закрытие 4 раза.
+"""
 
 pygame.init()
 FPS = 30
