@@ -5,6 +5,7 @@
 
 
 import pygame
+import random
 import numpy
 from pygame import draw  
 from pygame.draw import *
@@ -59,7 +60,6 @@ def fishs_eye(fish_eye_scale):
         fish_eye_surface, (fish_eye_scale, fish_eye_scale)
     )
 
-
 def draw_fish(x_fish, y_fish, size_of_fish):
     fish_surface = pygame.Surface((200, 200), pygame.SRCALPHA)
     fish_surface.fill((0, 0, 0, 0))
@@ -72,7 +72,7 @@ def draw_fish(x_fish, y_fish, size_of_fish):
                  (130, 119), (140, 117), (150, 114), (160, 110), (165, 106) 
                  ]
     massive_fish_tale=[(70, 100), (35, 120), (30, 90), (35, 93), (40, 95), (50, 98), (60, 99) ]
-
+    fish_surface.set_alpha(128)
     polygon(fish_surface, (50,100,150), massive_fish_body)
     polygon(fish_surface, (0,0,0), massive_fish_body, 1)
     polygon(fish_surface, (200,100,100), massive_fish_tale)
@@ -193,43 +193,57 @@ def draw_bird(x_bird, y_bird, size_of_bird, bird_flit_bool):
         (x_bird, y_bird)
     )
 
+#------------------- draw -------------
 
+def draw_background():
+    rect(screen, (33, 33, 120), (0,0, 600 , 80))
+    rect(screen, (141, 95, 211), (0, 80, 600,40))
+    rect(screen, (205, 135, 222), (0, 120, 600,70))
+    rect(screen, (222, 135, 170), (0, 190, 600,100))
+    rect(screen, (255, 153, 85), (0, 290, 600,80))
+    rect(screen, (0, 102, 128), (0, 370, 600,360))
 
+def draw_picture1():
+    draw_background()
+    draw_bird(0,280,500,0)
+    draw_fish(250, 560, 200)
+    draw_little_bird(120, -10, 150, 15)
+    draw_little_bird(300, 140, 150, 0)
+    draw_little_bird(130, 200, 150, -15)
+
+def draw_picture2():
+    draw_background()
+    for i in range(10):
+        draw_little_bird(random.randint(0,500), random.randint(0,300), 50, random.randint(-15, 15))
+    draw_bird(-50,280,500,0)
+    draw_bird(330,330,200,1)
+    draw_bird(220,360,100,0)
+    draw_fish(300, 560, 200)
+    draw_fish(320, 450, 200)
+    draw_fish(20, 580, 200)
+    draw_little_bird(120, -10, 150, 15)
+    draw_little_bird(300, 140, 150, 0)
+    draw_little_bird(130, 200, 150, -15)
 # -------------------- main ---------------
 
 
 pygame.init()
-
 FPS = 30
-screen = pygame.display.set_mode((800, 800))
-circle(screen, (100, 100, 100), (200, 200), 2000)
-#draw_fish(100, 100, 200)
-#draw_fish(300, 400, 200)
+screen = pygame.display.set_mode((520, 730))
+draw_picture1()
 
-draw_bird(0,0,800,0)
-
-#draw_little_bird(400, 400, 100, 30)
-"""
-circle(screen, (200, 200, 200), (200, 200), 500)
-circle(screen, (255, 255, 0), (200, 200), 100)
-circle(screen, (255, 0, 0), (150, 180), 15)
-circle(screen, (255, 0, 0), (250, 180), 20)
-rect(screen, (0, 0, 0), (195,165, 2,50))
-rect(screen, (0, 0, 0), (150,250, 100,20))
-polygon(screen, (0, 0, 0), [(180,170), (190,160), (110,130), (100,140)])
-polygon(screen, (0, 0, 0), [(220,170), (210,160), (270,130), (280,140)])
-circle(screen, (0, 0, 0), (150, 180), 5)
-circle(screen, (0, 0, 0), (250, 180), 5)
-"""
-
+I=1
 pygame.display.update()
 clock = pygame.time.Clock()
 finished = False
 
-while not finished:
+while I<5:
     clock.tick(FPS)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            finished = True
+            draw_picture2()
+            I+=1
+            pygame.display.flip()
+            
 
 pygame.quit()
