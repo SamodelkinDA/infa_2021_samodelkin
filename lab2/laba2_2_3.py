@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import turtle as tr
 import random as rn
+import pathlib
 
 def resettr():
     tr.clear()
@@ -24,7 +25,7 @@ def numberX(A, a):
     tr.forward(2*a)
     return
 
-inp_shrift = open('/../lab2/input_laba2_2_3.txt', 'r')
+inp_shrift = open(pathlib.Path("infa_2021_samodelkin", "lab2", "input_laba2_2_3.txt"), 'r')
 a=50
 y = input()
 tr.shape('arrow')

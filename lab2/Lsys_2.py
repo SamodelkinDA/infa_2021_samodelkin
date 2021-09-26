@@ -1,7 +1,7 @@
 import numpy as np
 import turtle as tr
 import random as rn
-
+import pathlib
 
 
 def move():
@@ -43,7 +43,7 @@ def resettr():
 
 
 Nomer=int(input())*9
-inp = open('\..\lab2\input_Lsys_2.txt', 'r')
+inp = open(pathlib.Path("infa_2021_samodelkin", "lab2", "input_Lsys_2.txt"), 'r')
 for i in range(Nomer):
     inp.readline()
 inp.readline()

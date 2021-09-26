@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import turtle as tr
 import random as rn
+import pathlib
 
 def resettr():
     tr.clear()
@@ -38,7 +39,7 @@ def numberX(A, a):
 
 
 # считывание из файла в заданной папке
-inp = open('/../lab3/input_laba2_2.txt', 'r')
+inp = open(pathlib.Path("infa_2021_samodelkin", "lab2", "input_laba2_2.txt"), 'r')
 x = inp.readlines()
 inp.close()
 
