@@ -12,6 +12,18 @@ import numpy
 from pygame import draw  
 from pygame.draw import *
 
+#----------- COLOURS ---------------
+
+RED = (200,100,100)
+BLACK = (0, 0, 0)
+WHITE = (250, 250, 250)
+BLICK = (230, 230, 230, 178)
+DARK_GREY = (10, 30, 30) 
+BLUE_EYE = (0, 0, 250)
+FISH_BODY_COLOUR = (50,100,150)
+YELLOW = (200,200,0)
+CLAW_COLOUR = (200,200,100)
+
 #--------------- LITTLE Bird ----------
 
 def draw_little_bird(x_little_bird, y_little_bird, size_of_little_bird, angle_of_little_bird):
@@ -48,8 +60,8 @@ def fishs_fin(fin_size, fin_tetta, fin_flip_bool):
                       (140, 60), (40, 60), (50, 65), (60, 72), (70, 81),
                       (80, 91),(90, 102),(100, 114),(110, 135), 
                       (115, 155)]
-    polygon(fish_fin_surface, (200,100,100), massive_fish_fin)
-    polygon(fish_fin_surface, (0,0,0), massive_fish_fin, 4)
+    polygon(fish_fin_surface, RED, massive_fish_fin)
+    polygon(fish_fin_surface, BLACK, massive_fish_fin, 4)
     return (pygame.transform.scale(
         pygame.transform.flip(
             pygame.transform.rotate(
@@ -70,9 +82,9 @@ def fishs_eye(fish_eye_scale):
     fish_eye_blic_surface = pygame.Surface((100, 100), pygame.SRCALPHA)
     fish_eye_blic_surface.fill((0, 0, 0, 0))
 
-    circle(fish_eye_surface, (0, 0, 250), (100, 100), 50)
-    circle(fish_eye_surface, (10, 30, 30), (110, 110), 20)
-    ellipse(fish_eye_blic_surface, (230, 230, 230, 178), [20, 20, 15, 40], 0)
+    circle(fish_eye_surface, BLUE_EYE, (100, 100), 50)
+    circle(fish_eye_surface, DARK_GREY, (110, 110), 20)
+    ellipse(fish_eye_blic_surface, BLICK, [20, 20, 15, 40], 0)
     fish_eye_surface.blit(pygame.transform.rotate(fish_eye_blic_surface, 45), (44, 16))
     return pygame.transform.scale(
         fish_eye_surface, (fish_eye_scale, fish_eye_scale)
@@ -89,19 +101,21 @@ def draw_fish(x_fish, y_fish, size_of_fish):
     fish_surface.blit(fishs_fin(70, -5, 0), (80, 50))
     fish_surface.blit(fishs_fin(40, 190, 0), (120, 100))
     fish_surface.blit(fishs_fin(40, 190, 1), (75, 95))
+
     massive_fish_body=[(170, 100), (165, 94), (160, 90), (150, 86), (140, 83), 
                  (130, 81), (120, 81), (110, 83), (100, 86), (90, 90), (80, 94),    
                  (70, 100), (80, 104), (90, 110), (100, 114), (110, 117), (120, 119),
                  (130, 119), (140, 117), (150, 114), (160, 110), (165, 106) 
                  ]
     massive_fish_tale=[(70, 100), (35, 120), (30, 90), (35, 93), (40, 95), (50, 98), (60, 99) ]
+
     fish_surface.set_alpha(128)
-    polygon(fish_surface, (50,100,150), massive_fish_body)
-    polygon(fish_surface, (0,0,0), massive_fish_body, 1)
-    polygon(fish_surface, (200,100,100), massive_fish_tale)
-    polygon(fish_surface, (0,0,0), massive_fish_tale, 1)
+    polygon(fish_surface, FISH_BODY_COLOUR, massive_fish_body)
+    polygon(fish_surface, BLACK, massive_fish_body, 1)
+    polygon(fish_surface, RED, massive_fish_tale)
+    polygon(fish_surface, BLACK, massive_fish_tale, 1)
     for i in range(0, 5, 1):
-        line(fish_surface, (0,0,0), (70, 100), (31 + i, 96 + 6*i), 1)
+        line(fish_surface, BLACK, (70, 100), (31 + i, 96 + 6*i), 1)
     fish_surface.blit(fishs_eye(30), (130, 85))
     screen.blit(pygame.transform.scale(
         fish_surface, (size_of_fish, size_of_fish)), 
@@ -123,8 +137,8 @@ def birds_beak(beak_size, beak_flap_bool):
                  (150, 80),  (148, 86), (143, 99), (135, 107), (130, 109),
                  (115, 111), (100, 112), (70, 111), (55, 110)
                  ]
-    polygon(bird_beak_surface, (200,200,0), massive_beak)
-    polygon(bird_beak_surface, (0,0,0), massive_beak, 2)
+    polygon(bird_beak_surface, YELLOW, massive_beak)
+    polygon(bird_beak_surface, BLACK, massive_beak, 2)
     return pygame.transform.scale(
         pygame.transform.flip(
             bird_beak_surface, 0, beak_flap_bool
@@ -138,7 +152,7 @@ def draw_oval(x_long, y_short , tetta_rotat):
     """
     Oval_surf = pygame.Surface((200, 200), pygame.SRCALPHA)
     Oval_surf.fill((0, 0, 0, 0))    
-    ellipse(Oval_surf, (250, 250, 250), [100 - x_long/2, 100 - y_short/2, x_long, y_short])
+    ellipse(Oval_surf, WHITE, [100 - x_long/2, 100 - y_short/2, x_long, y_short])
     return pygame.transform.rotate(
             Oval_surf, tetta_rotat
         )   
@@ -155,8 +169,8 @@ def bird_claw(claw_size):
                  (290, 110), (380, 140), (320, 100),
                  (290, 90), (200, 80), (107, 95), (80, 110),  (72, 122)
                  ]
-    polygon(bird_claw_surface, (200,200,100), massive_claw)
-    polygon(bird_claw_surface, (0,0,0), massive_claw, 2)
+    polygon(bird_claw_surface, CLAW_COLOUR, massive_claw)
+    polygon(bird_claw_surface, BLACK, massive_claw, 2)
     return pygame.transform.scale(
         pygame.transform.rotate(
         bird_claw_surface, 10
@@ -193,8 +207,8 @@ def bird_wing(wing_size, wing_tetta):
                  (80, 160), (100, 175), (130, 190), (160, 197), (190, 210), 
                  (205, 230), (218, 256), (220, 260), (224, 265), (260, 300), (285, 320)
                  ]
-    polygon(bird_wing_surface, (250,250,250), massive_wing)
-    polygon(bird_wing_surface, (0,0,0), massive_wing, 2)
+    polygon(bird_wing_surface, WHITE, massive_wing)
+    polygon(bird_wing_surface, BLACK, massive_wing, 2)
     return pygame.transform.scale(
         pygame.transform.rotate(
         bird_wing_surface,  wing_tetta
@@ -213,8 +227,8 @@ def bird_tale(tale_size, tale_tetta):
                  (130, 60), (110, 100), (90, 145), (70, 200), (63, 240), 
                  (62, 250), (65, 255), (115, 276), (165, 287), (215, 294), (265, 298), (320, 300)
                  ]
-    polygon(bird_tale_surface, (250,250,250), massive_tale)
-    polygon(bird_tale_surface, (0,0,0), massive_tale, 2)
+    polygon(bird_tale_surface, WHITE, massive_tale)
+    polygon(bird_tale_surface, BLACK, massive_tale, 2)
     return pygame.transform.scale(
         pygame.transform.rotate(
         bird_tale_surface,  tale_tetta
@@ -239,10 +253,10 @@ def draw_bird(x_bird, y_bird, size_of_bird, bird_flip_bool):
     bird_surface.blit(bird_wing(400, -15), (105,60))
     bird_surface.blit(bird_wing(400, 10), (35,110))
     
-    ellipse(bird_surface, (250, 250, 250), [280, 350, 240, 100])
-    ellipse(bird_surface, (250, 250, 250), [480, 370, 120, 40])
-    ellipse(bird_surface, (250, 250, 250), [560, 340, 80, 50])
-    ellipse(bird_surface, (0, 0, 0), [606, 356, 10, 10])
+    ellipse(bird_surface, WHITE, [280, 350, 240, 100])
+    ellipse(bird_surface, WHITE, [480, 370, 120, 40])
+    ellipse(bird_surface, WHITE, [560, 340, 80, 50])
+    ellipse(bird_surface, BLACK, [606, 356, 10, 10])
     screen.blit(pygame.transform.scale(
         pygame.transform.flip(
             bird_surface, bird_flip_bool, 0
@@ -311,6 +325,5 @@ while I<5:
             draw_picture2()
             I+=1
             pygame.display.flip()
-            
 
 pygame.quit()
