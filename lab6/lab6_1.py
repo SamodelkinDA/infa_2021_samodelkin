@@ -42,19 +42,33 @@ def finish(score):
         mass[i + k] = current
     list_best.close()
     screen.fill(BLACK)
-    draw_text("Your score: " + str(int(score)), 50, WIDTH / 2, 20, WHITE)
-    draw_text("Best scores:", 50, WIDTH / 2, 120, WHITE)
     list_best = open(pathlib.Path(pathlib.Path.home(),"infa_2021_samodelkin", "lab6", "best_pl.txt"), 'w')
     for i in range(5):
-        draw_text(str(mass[i]), 50, WIDTH / 2, i * 100 + 220, WHITE)
         list_best.write(str(mass[i]) + "\n")
     list_best.close()
     pygame.display.flip()
     while not close:
+        click = False
         clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 close = True
+            if event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:
+                    click = True 
+        x, y = pygame.mouse.get_pos()
+        screen.fill(BLACK)
+        draw_text("Your score: " + str(int(score)), 50, WIDTH / 2, 20, WHITE)
+        draw_text("Best scores:", 50, WIDTH / 2, 120, WHITE)
+        for i in range(5):
+            draw_text(str(mass[i]), 50, WIDTH / 2, i * 100 + 220, WHITE)
+        if (WIDTH / 2 - x) ** 2 < 2500 and (740 - y) ** 2 < 900:
+            draw_text("EXIT", 50, WIDTH / 2, 720, RED) 
+            if click == True:
+                close = True
+        else:
+            draw_text("EXIT", 50, WIDTH / 2, 720, WHITE) 
+        pygame.display.flip()
     
 def new_ball():
     dict = {
