@@ -1,7 +1,6 @@
 import pygame
 from pygame.draw import *
 import random
-pygame.init()
 import pathlib
 
 FPS = 30
@@ -34,6 +33,7 @@ def draw_text(text, size, x, y, colour):
 
 def finish(score):
     """ Финальное окно. Обращается к файлу с таблицей результатов"""
+    global finished
     close = False
     list_best = open(pathlib.Path(pathlib.Path.home(),"infa_2021_samodelkin", "lab6", "best_pl.txt"), 'r')
     mass = [0] * 6
@@ -57,6 +57,7 @@ def finish(score):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 close = True
+                finished = True
             if event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:
                     click = True 
@@ -67,11 +68,12 @@ def finish(score):
         for i in range(5):
             draw_text(str(mass[i]), 50, WIDTH / 2, i * 100 + 220, WHITE)
         if (WIDTH / 2 - x) ** 2 < 2500 and (740 - y) ** 2 < 900:
-            draw_text("EXIT", 50, WIDTH / 2, 720, RED) 
+            draw_text("MENU", 50, WIDTH / 2, 720, RED) 
             if click == True:
+                new_game()
                 close = True
         else:
-            draw_text("EXIT", 50, WIDTH / 2, 720, WHITE) 
+            draw_text("MENU", 50, WIDTH / 2, 720, WHITE) 
         pygame.display.flip()
     
 def new_ball():
@@ -168,41 +170,66 @@ def update(x ,y, balls, rects):
             rects = (new_rect(),)
     if time_play < now:
         finish(score)
-        finished = True
     return tuple(massiv), rects
-        
+
+def new_game():
+    global finished
+    global balls, rects, score
+    global time_play
+    start = False
+    balls = ()
+    rects = ()
+    score = 0
+
+    """ Стартовое меню """
+    while not start:
+        click = False
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                start = True
+                finished = True
+            if event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:
+                    click = True 
+        x, y = pygame.mouse.get_pos()
+        screen.fill(BLACK)
+        if (WIDTH / 2 - x) ** 2 < 10000 and (HEIGHT / 2 - y - 60) ** 2 < 900:
+            draw_text("START", 40, WIDTH / 2, HEIGHT / 2 - 80, RED) 
+            draw_text("SCORES", 40, WIDTH / 2, HEIGHT / 2 - 20, WHITE) 
+            draw_text("EXIT", 40, WIDTH / 2, HEIGHT / 2 + 40, WHITE) 
+            if click == True:
+                start = True
+                time_play = pygame.time.get_ticks() + PLAY_TIME
+        elif (WIDTH / 2 - x) ** 2 < 10000 and (HEIGHT / 2 - y) ** 2 < 900:
+            draw_text("START", 40, WIDTH / 2, HEIGHT / 2 - 80, WHITE) 
+            draw_text("SCORES", 40, WIDTH / 2, HEIGHT / 2 - 20, RED) 
+            draw_text("EXIT", 40, WIDTH / 2, HEIGHT / 2 + 40, WHITE) 
+            if click == True:
+                finish(0)
+                start = True
+        elif (WIDTH / 2 - x) ** 2 < 10000 and (HEIGHT / 2 - y + 60) ** 2 < 900:
+            draw_text("START", 40, WIDTH / 2, HEIGHT / 2 - 80, WHITE) 
+            draw_text("SCORES", 40, WIDTH / 2, HEIGHT / 2 - 20, WHITE) 
+            draw_text("EXIT", 40, WIDTH / 2, HEIGHT / 2 + 40, RED) 
+            if click == True:
+                start = True
+                finished = True 
+        else:
+            draw_text("START", 40, WIDTH / 2, HEIGHT / 2 - 80, WHITE) 
+            draw_text("SCORES", 40, WIDTH / 2, HEIGHT / 2 - 20, WHITE) 
+            draw_text("EXIT", 40, WIDTH / 2, HEIGHT / 2 + 40, WHITE) 
+        pygame.display.flip()
+    
+
+pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.update()
 clock = pygame.time.Clock()
 finished = False
-start = False
-balls = ()
-rects = ()
-score = 0
+time_play = 0
 
-""" Стартовое меню """
-while not start:
-    click = False
-    clock.tick(FPS)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            start = True
-            finished = True
-        if event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 1:
-                click = True 
-    x, y = pygame.mouse.get_pos()
-    screen.fill(BLACK)
-    if (WIDTH / 2 - x) ** 2 < 10000 and (HEIGHT / 2 - y) ** 2 < 900:
-        draw_text("START", 50, WIDTH / 2, HEIGHT / 2 - 20, RED) 
-        if click == True:
-            start = True
-    else:
-        draw_text("START", 50, WIDTH / 2, HEIGHT / 2 - 20, WHITE) 
-    pygame.display.flip()
-
-
-time_play = pygame.time.get_ticks() + PLAY_TIME
+new_game()
 
 while not finished:
     """ Основное тело игры """
