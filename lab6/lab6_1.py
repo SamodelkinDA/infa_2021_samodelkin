@@ -2,6 +2,8 @@ import pygame
 from pygame.draw import *
 import random
 import pathlib
+import ctypes
+
 
 FPS = 30
 WIDTH = 1200
@@ -223,6 +225,14 @@ def new_game():
     
 
 pygame.init()
+embl = pygame.Surface((32, 32))
+circle(embl, RED, (20, 15), 10)
+circle(embl, GREEN, (2, 4), 15)
+
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID()
+
+pygame.display.set_icon(embl)
+pygame.display.set_caption("Kruzochki")
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.update()
 clock = pygame.time.Clock()
