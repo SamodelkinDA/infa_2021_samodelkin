@@ -23,6 +23,9 @@ WHITE = (255, 255, 255)
 COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 
 def draw_text(text, size, x, y, colour):
+    """ Функция рисует текст, заданного размера и цвета 
+    Опрорной точкой х, у является центр верха текста. 
+    """
     font = pygame.font.SysFont("arial", size)
     text_surface = font.render(text, True, colour)
     text_rect = text_surface.get_rect()
@@ -30,6 +33,7 @@ def draw_text(text, size, x, y, colour):
     screen.blit(text_surface, text_rect)
 
 def finish(score):
+    """ Финальное окно. Обращается к файлу с таблицей результатов"""
     close = False
     list_best = open(pathlib.Path(pathlib.Path.home(),"infa_2021_samodelkin", "lab6", "best_pl.txt"), 'r')
     mass = [0] * 6
@@ -42,7 +46,7 @@ def finish(score):
         mass[i + k] = current
     list_best.close()
     screen.fill(BLACK)
-    list_best = open(pathlib.Path(pathlib.Path.home(),"infa_2021_samodelkin", "lab6", "best_pl.txt"), 'w')
+    list_best = open(pathlib.Path(pathlib.Path.home(), "infa_2021_samodelkin", "lab6", "best_pl.txt"), 'w')
     for i in range(5):
         list_best.write(str(mass[i]) + "\n")
     list_best.close()
@@ -71,6 +75,9 @@ def finish(score):
         pygame.display.flip()
     
 def new_ball():
+    """ Создается шарик случайного цвета и положения.
+    Так же случайно выбирается время жизни, радиус и скорость.
+    """
     dict = {
         "x": random.randint(50, WIDTH - 50),
         "y": random.randint(50, HEIGHT - 50),
@@ -83,16 +90,52 @@ def new_ball():
     }
     return dict
     
-def update(x ,y, balls):
+def new_rect():
+    """ Создается квадратик случайного цвета и положения.
+    Так же случайно выбирается время жизни, радиус и скорость.
+    """
+    dict = {
+        "x": random.randint(50, WIDTH - 50),
+        "y": random.randint(50, HEIGHT - 50),
+        "vx": random.randint(-1, 1),
+        "vy": random.randint(-1, 1),
+        "clr": COLORS[random.randint(0, 5)],
+        "sp_time": pygame.time.get_ticks(),
+        "time_live": 3000
+    }
+    return dict
+
+def update(x ,y, balls, rects):
+    """  Основная часть. Обновление положений всех элементов 
+    Проводит расчет очков и добавляет
+    """
     global time_play
     global score
     global finished
     massiv = []
     now = pygame.time.get_ticks()
+    for i in rects:
+        delet = False
+        
+        if (i.get("x") - x) ** 2 < 400 and (i.get("y") - y) ** 2 < 400:
+            score += 50
+            i["vx"] = i["vx"] * random.randint(-3, 3) - 1
+            i["vy"] = i["vy"] * random.randint(-3, 3) + 1
+        if now - i.get("sp_time") > i.get("time_live"):
+            delet = True
+        i["x"] += i.get("vx")
+        i["y"] += i.get("vy")
+        i["clr"] = COLORS[random.randint(0, 5)],
+        rect(screen, i.get("clr"), [i.get("x") - 20, i.get("y") - 20, 40, 40])
+        rects = ()
+        if not delet:
+            rects = (i,)
+
+
     for i in balls:
         if (i.get("x") - x) ** 2 + (i.get("y") - y) ** 2 < i.get("r") ** 2:
             ds = (60 - i.get("r")) * ((now - i.get("sp_time")) / i.get("time_live")) ** 2
-            score += ds
+            score += ds * 1000 / i.get("time_live")
             time_play += ds * 100
         elif now - i.get("sp_time") > i.get("time_live"):
             pass
@@ -120,10 +163,13 @@ def update(x ,y, balls):
     if len(massiv) <= 3 :
         massiv.append(new_ball())
     draw_text(str(int(score)), 30, WIDTH / 2, 20, WHITE)
+    if len(rects) == 0:
+        if random.randint(1, 1000) < 10:
+            rects = (new_rect(),)
     if time_play < now:
         finish(score)
         finished = True
-    return tuple(massiv)
+    return tuple(massiv), rects
         
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.update()
@@ -131,9 +177,10 @@ clock = pygame.time.Clock()
 finished = False
 start = False
 balls = ()
+rects = ()
 score = 0
 
-
+""" Стартовое меню """
 while not start:
     click = False
     clock.tick(FPS)
@@ -146,7 +193,7 @@ while not start:
                 click = True 
     x, y = pygame.mouse.get_pos()
     screen.fill(BLACK)
-    if (WIDTH / 2 - x) ** 2 < 2500 and (HEIGHT / 2 - y) ** 2 < 900:
+    if (WIDTH / 2 - x) ** 2 < 10000 and (HEIGHT / 2 - y) ** 2 < 900:
         draw_text("START", 50, WIDTH / 2, HEIGHT / 2 - 20, RED) 
         if click == True:
             start = True
@@ -158,6 +205,7 @@ while not start:
 time_play = pygame.time.get_ticks() + PLAY_TIME
 
 while not finished:
+    """ Основное тело игры """
     clock.tick(FPS)
     x, y = (0, 0)
     for event in pygame.event.get():
@@ -167,7 +215,7 @@ while not finished:
             if event.button == 1:
                 x, y = event.pos
     screen.fill(BLACK)
-    balls = update(x, y, balls)
+    balls, rects = update(x, y, balls, rects)
     
     pygame.display.flip()
 
