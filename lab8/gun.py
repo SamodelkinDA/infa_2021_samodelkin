@@ -16,18 +16,20 @@ WHITE = (255, 255, 255)
 GREY = (125, 125, 125)
 GAME_COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 
+
+
 WIDTH = 800
 HEIGHT = 600
 
 
 class Ball:
-    radius = 10
-    def __init__(self, speed, an,  x=20, y=450):
+    def __init__(self, speed, an,  x=20, y=450, r=10):
         """ Конструктор класса ball
         Args:
         x - начальное положение мяча по горизонтали
         y - начальное положение мяча по вертикали
         """
+        self.radius = r
         self.x = x
         self.y = y
         self.color = random.choice(GAME_COLORS)
@@ -80,19 +82,52 @@ class Ball:
         return False
 
 class Gun:
-    def __init__(self, x=20, y=450):
+    def __init__(self, x=40, y=450, ang=0, tip=0):
         self.x = x
         self.y = y
+        self.tip = tip
         self.f2_power = 10
         self.f2_on = 0
-        self.an = 0
-        self.color = GREY
+        self.an = ang
+        self.last_shoot = 0
+        self.bullets = 10000
 
-
-    def fire2_start(self, event):
+    def fire2_start(self):
         self.f2_on = 1
 
-    def fire2_end(self, event):
+    def set_defolt(self):
+        self.f2_on = 0
+        self.f2_power = 10
+
+    def targetting(self, event):
+        """Прицеливание. Зависит от положения мыши."""
+        if event:
+            if (event.pos[0]-self.x) != 0:
+                self.an = math.atan((event.pos[1]-self.y) / (event.pos[0]-self.x))
+            else:
+                self.an = math.pi / 2
+        
+    def change_type(self, event):
+        global gun
+        
+        if event.key == pygame.K_LEFT:
+            self.tip -= 1
+        if event.key == pygame.K_RIGHT:
+            self.tip += 1
+        if self.tip < 0:
+            self.tip = 0
+        elif self.tip > 2:
+            self.tip = 2
+        gun = GUN_TIPS[str(self.tip)](ang=self.an, tip=self.tip)
+    
+    def power_up(self):
+        if self.f2_on:
+            if self.f2_power < 100:
+                self.f2_power += 1
+        self.shooting()
+
+class Canon(Gun):
+    def fire2_end(self):
         """Выстрел мячом.
 
         Происходит при отпускании кнопки мыши.
@@ -100,22 +135,44 @@ class Gun:
         """
         global balls
         new_ball = Ball(self.f2_power, self.an)
-
         balls.append(new_ball)
-        self.f2_on = 0
-        self.f2_power = 10
+        self.set_defolt()
 
-    def targetting(self, event):
-        """Прицеливание. Зависит от положения мыши."""
-        if event:
-            if (event.pos[0]-20) != 0:
-                self.an = math.atan((event.pos[1]-450) / (event.pos[0]-20))
-            else:
-                self.an = math.pi / 2
-        if self.f2_on:
-            self.color = RED
-        else:
-            self.color = GREY
+    def draw(self):
+        # FIXIT don't know how to do it - FIXED
+        """
+        self.surf_orig = pygame.Surface((200, 200), pygame.SRCALPHA)
+        self.surf_orig.fill((0, 0, 0, 0))
+        pygame.draw.rect(self.surf, self.color , [100 , 95, 30 + self.f2_power / 2, 10])
+        """
+        self.surf = pygame.transform.rotate(
+            canon_imgs[self.f2_power // 7 - 1], - self.an * 180 / math.pi
+            )
+        self.surf_rect = self.surf.get_rect()
+        screen.blit(self.surf, (
+            self.x - self.surf_rect.width / 2,
+            self.y - self.surf_rect.height / 2
+            ))
+    def shooting(self):
+        pass
+
+class Shootgun(Gun):
+    def fire2_end(self):
+        """Выстрел мячом.
+
+        Происходит при отпускании кнопки мыши.
+        Начальные значения компонент скорости мяча vx и vy зависят от положения мыши.
+        """
+        global balls
+        now = pygame.time.get_ticks()
+        if now - self.last_shoot > 2000:
+            self.last_shoot = now
+            for i in range(self.f2_power // 5):
+                ang = self.an + (random.random() - 0.5) * self.f2_power / 200
+                new_ball = Ball(random.randint(50, 100), ang, r=3)
+                balls.append(new_ball)
+    
+        self.set_defolt()
 
     def draw(self):
         # FIXIT don't know how to do it - FIXED
@@ -133,19 +190,43 @@ class Gun:
             self.y - self.surf_rect.height / 2
             ))
 
-    def power_up(self):
-        if self.f2_on:
-            if self.f2_power < 100:
-                self.f2_power += 1
-            self.color = RED
-        else:
-            self.color = GREY
-
-class Canon(Gun):
-    pass
+    def shooting(self):
+        pass
 
 class Minigun(Gun):
-    pass
+    def fire2_end(self):
+        """Выстрел мячом.
+
+        Происходит при отпускании кнопки мыши.
+        Начальные значения компонент скорости мяча vx и vy зависят от положения мыши.
+        """
+        self.set_defolt()
+
+    def draw(self):
+        # FIXIT don't know how to do it - FIXED
+        """
+        self.surf_orig = pygame.Surface((200, 200), pygame.SRCALPHA)
+        self.surf_orig.fill((0, 0, 0, 0))
+        pygame.draw.rect(self.surf, self.color , [100 , 95, 30 + self.f2_power / 2, 10])
+        """
+        self.surf = pygame.transform.rotate(
+            mini_imgs[self.bullets % 2], - self.an * 180 / math.pi
+            )
+        self.surf_rect = self.surf.get_rect()
+        screen.blit(self.surf, (
+            self.x - self.surf_rect.width / 2,
+            self.y - self.surf_rect.height / 2
+            ))
+
+    def shooting(self):
+        global balls
+        now = pygame.time.get_ticks()
+        if now - self.last_shoot > 500000 / self.f2_power ** 2 and self.f2_on:
+            self.bullets -= 1
+            self.last_shoot = now
+            ang = self.an + (random.random() - 0.5) * self.f2_power / 500
+            new_ball = Ball(80, ang, r=5)
+            balls.append(new_ball)
 
 class Target:
     # self.points = 0
@@ -168,7 +249,7 @@ class Target:
 
     def hit(self, points=1):
         """Попадание шарика в цель."""
-        global score 
+        global score, gun
         self.hp -= points
         crack = pygame.transform.rotate(
             pygame.transform.scale(
@@ -207,6 +288,12 @@ def draw_text(text, size, x, y, colour):
     text_rect.midtop = (x, y)
     screen.blit(text_surface, text_rect)
 
+
+GUN_TIPS = {"0": Canon,
+            "1": Minigun,
+            "2": Shootgun
+        }
+
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 balls = []
@@ -225,9 +312,15 @@ for i in range(3):
         pathlib.Path.home(),"infa_2021_samodelkin", "lab8", "images", 'crack{}.png'.format(i)
         )), (400, 400)).convert())
     crack_imgs[i].set_colorkey(WHITE)
+mini_imgs = []
+for i in range(2):
+    mini_imgs.append(pygame.transform.scale(pygame.image.load(pathlib.Path(
+        pathlib.Path.home(),"infa_2021_samodelkin", "lab8", "images", 'minigun{}.png'.format(i)
+        )), (200, 200)).convert())
+    mini_imgs[i].set_colorkey(WHITE)
 
 clock = pygame.time.Clock()
-gun = Gun()
+gun = Shootgun()
 target.append(Target())
 target.append(Target())
 finished = False
@@ -240,11 +333,13 @@ while not finished:
         if event.type == pygame.QUIT:
             finished = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            gun.fire2_start(event)
+            gun.fire2_start()
         elif event.type == pygame.MOUSEBUTTONUP:
-            gun.fire2_end(event)
+            gun.fire2_end()
         elif event.type == pygame.MOUSEMOTION:
             gun.targetting(event)
+        elif event.type == pygame.KEYDOWN:
+            gun.change_type(event)
 
     for b in balls:
         b.move()
@@ -265,5 +360,6 @@ while not finished:
     draw_text(str(score), 50, 50, 50, RED )
     pygame.display.flip()
     gun.power_up()
+
 
 pygame.quit()
