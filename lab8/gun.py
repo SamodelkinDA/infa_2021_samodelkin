@@ -1,7 +1,7 @@
 import math
 import random
 import pygame
-
+import pathlib
 
 FPS = 60
 
@@ -87,8 +87,7 @@ class Gun:
         self.f2_on = 0
         self.an = 0
         self.color = GREY
-        self.surf_orig = pygame.Surface((200, 200), pygame.SRCALPHA)
-        self.surf_orig.fill((0, 0, 0, 0))
+
 
     def fire2_start(self, event):
         self.f2_on = 1
@@ -110,7 +109,10 @@ class Gun:
     def targetting(self, event):
         """Прицеливание. Зависит от положения мыши."""
         if event:
-            self.an = math.atan((event.pos[1]-450) / (event.pos[0]-20))
+            if (event.pos[0]-20) != 0:
+                self.an = math.atan((event.pos[1]-450) / (event.pos[0]-20))
+            else:
+                self.an = math.pi / 2
         if self.f2_on:
             self.color = RED
         else:
@@ -118,9 +120,14 @@ class Gun:
 
     def draw(self):
         # FIXIT don't know how to do it - FIXED
-        self.surf = self.surf_orig.copy()
+        """
+        self.surf_orig = pygame.Surface((200, 200), pygame.SRCALPHA)
+        self.surf_orig.fill((0, 0, 0, 0))
         pygame.draw.rect(self.surf, self.color , [100 , 95, 30 + self.f2_power / 2, 10])
-        self.surf = pygame.transform.rotate(self.surf, - self.an * 180 / math.pi)
+        """
+        self.surf = pygame.transform.rotate(
+            canon_imgs[self.f2_power // 7 - 1], - self.an * 180 / math.pi
+            )
         self.surf_rect = self.surf.get_rect()
         screen.blit(self.surf, (
             self.x - self.surf_rect.width / 2,
@@ -188,6 +195,12 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 bullet = 0
 balls = []
 score = 0
+
+canon_imgs = []
+for i in range(14):
+    canon_imgs.append(pygame.transform.scale(pygame.image.load(pathlib.Path(
+        pathlib.Path.home(),"infa_2021_samodelkin", "lab8", "images", 'cannon{}.png'.format(i)
+        )), (150, 150)).convert())
 
 clock = pygame.time.Clock()
 gun = Gun()
