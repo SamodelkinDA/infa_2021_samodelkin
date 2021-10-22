@@ -98,8 +98,7 @@ class Gun:
         Происходит при отпускании кнопки мыши.
         Начальные значения компонент скорости мяча vx и vy зависят от положения мыши.
         """
-        global balls, bullet
-        bullet += 1
+        global balls
         new_ball = Ball(self.f2_power, self.an)
 
         balls.append(new_ball)
@@ -142,17 +141,20 @@ class Gun:
         else:
             self.color = GREY
 
+class Canon(Gun):
+    pass
+
+class Minigun(Gun):
+    pass
+
 class Target:
     # self.points = 0
     # self.live = 1
     # FIXME: don't work!!! How to call this functions when object is created?
     # self.new_target()
     def __init__(self):
-        self.hp = random.randint(1, 3)
-        self.x = random.randint(600, 780)
-        self.y = random.randint(100, 500)
-        self.r = random.randint(5, 50)
-        self.color = random_colour()
+        self.img = pygame.Surface((100, 100), pygame.SRCALPHA)
+        self.new_target()
 
     def new_target(self):
         """ Инициализация новой цели. """
@@ -161,21 +163,36 @@ class Target:
         self.y = random.randint(100, 500)
         self.r = random.randint(5, 50)
         self.color = random_colour()
+        self.img.fill((0, 0, 0, 0))
+        pygame.draw.circle(self.img, self.color, (50, 50), self.r)
 
     def hit(self, points=1):
         """Попадание шарика в цель."""
         global score 
         self.hp -= points
-        self.color = random_colour()
+        crack = pygame.transform.rotate(
+            pygame.transform.scale(
+                random.choice(crack_imgs), (4 * self.r, 4 * self.r)
+            ), random.randint(0, 359)
+        )
+        crack_rect = crack.get_rect()
+        self.img.blit(crack, (50 - crack_rect.width / 2, 50 - crack_rect.height / 2))
         if self.hp <= 0:
             self.new_target()
             score += 1
+
+    def move(self):
+        self.x += random.randint(-2, 2) * 60 / FPS
+        self.y += random.randint(-2, 2) * 60 / FPS
+        if not ((500 < self.x < 780) and (100 < self.y < 500)):
+            self.new_target()
 
     def get_param(self):
         return self.x, self.y, self.r
 
     def draw(self):
-        pygame.draw.circle(screen, self.color, (self.x, self.y), self.r)
+        screen.blit(self.img, (self.x - 50, self.y - 50))
+        #pygame.draw.circle(screen, self.color, (self.x, self.y), self.r)
 
 def random_colour():
     return tuple( [random.randint(20, 240) for i in range(3)])
@@ -192,8 +209,8 @@ def draw_text(text, size, x, y, colour):
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-bullet = 0
 balls = []
+target = []
 score = 0
 
 canon_imgs = []
@@ -201,22 +218,23 @@ for i in range(14):
     canon_imgs.append(pygame.transform.scale(pygame.image.load(pathlib.Path(
         pathlib.Path.home(),"infa_2021_samodelkin", "lab8", "images", 'cannon{}.png'.format(i)
         )), (150, 150)).convert())
+    canon_imgs[i].set_colorkey(WHITE)
+crack_imgs = []
+for i in range(3):
+    crack_imgs.append(pygame.transform.scale(pygame.image.load(pathlib.Path(
+        pathlib.Path.home(),"infa_2021_samodelkin", "lab8", "images", 'crack{}.png'.format(i)
+        )), (400, 400)).convert())
+    crack_imgs[i].set_colorkey(WHITE)
 
 clock = pygame.time.Clock()
 gun = Gun()
-target = Target()
+target.append(Target())
+target.append(Target())
 finished = False
 
 
 while not finished:
     screen.fill(WHITE)
-    gun.draw()
-    target.draw()
-    draw_text(str(score), 50, 50, 50, RED )
-    for b in balls:
-        b.draw()
-    pygame.display.flip()
-
     clock.tick(FPS)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -230,11 +248,22 @@ while not finished:
 
     for b in balls:
         b.move()
-        if b.hittest(target):
-            target.hit()
+        rem = False
+        for t in target:
+            if b.hittest(t) and (not rem) :
+                t.hit()
+                rem = True
+        if b.should_del():
+            rem = True
+        if rem == True:
             balls.remove(b)
-        elif b.should_del():
-            balls.remove(b)
+        b.draw()
+    for t in target:
+        t.move()
+        t.draw()
+    gun.draw()
+    draw_text(str(score), 50, 50, 50, RED )
+    pygame.display.flip()
     gun.power_up()
 
 pygame.quit()
