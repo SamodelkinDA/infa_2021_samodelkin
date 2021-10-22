@@ -3,7 +3,7 @@ import random
 import pygame
 
 
-FPS = 30
+FPS = 60
 
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
@@ -31,7 +31,7 @@ class Ball:
         self.x = x
         self.y = y
         self.color = random.choice(GAME_COLORS)
-        self.live = FPS 
+        self.live = FPS * 3
         self.vx = speed * math.cos(an)
         self.vy = speed * math.sin(an)
 
@@ -55,7 +55,7 @@ class Ball:
         self.y += self.vy * 30 / FPS
         self.live -= 1
 
-    def shoul_del(self):
+    def should_del(self):
         return self.live < 0
 
     def draw(self):
@@ -74,6 +74,9 @@ class Ball:
         Returns:
             Возвращает True в случае столкновения мяча и цели. В противном случае возвращает False.
         """
+        x, y, r = obj.get_param()
+        if (x - self.x) ** 2 + (y - self.y) ** 2 < (self.radius + r) ** 2:
+            return True
         return False
 
 class Gun:
@@ -123,7 +126,6 @@ class Gun:
             self.x - self.surf_rect.width / 2,
             self.y - self.surf_rect.height / 2
             ))
-        #(self.x, self.y)
 
     def power_up(self):
         if self.f2_on:
@@ -139,21 +141,31 @@ class Target:
     # FIXME: don't work!!! How to call this functions when object is created?
     # self.new_target()
     def __init__(self):
+        self.hp = random.randint(1, 3)
         self.x = random.randint(600, 780)
-        self.y = random.randint(300, 550)
+        self.y = random.randint(100, 500)
         self.r = random.randint(5, 50)
         self.color = random_colour()
 
     def new_target(self):
         """ Инициализация новой цели. """
+        self.hp = random.randint(1, 3)
         self.x = random.randint(600, 780)
-        self.y = random.randint(300, 500)
+        self.y = random.randint(100, 500)
         self.r = random.randint(5, 50)
         self.color = random_colour()
 
     def hit(self, points=1):
         """Попадание шарика в цель."""
-        self.points += points
+        global score 
+        self.hp -= points
+        self.color = random_colour()
+        if self.hp <= 0:
+            self.new_target()
+            score += 1
+
+    def get_param(self):
+        return self.x, self.y, self.r
 
     def draw(self):
         pygame.draw.circle(screen, self.color, (self.x, self.y), self.r)
@@ -161,10 +173,21 @@ class Target:
 def random_colour():
     return tuple( [random.randint(20, 240) for i in range(3)])
 
+def draw_text(text, size, x, y, colour):
+    """ Функция рисует текст, заданного размера и цвета 
+    Опрорной точкой х, у является центр верха текста. 
+    """
+    font = pygame.font.SysFont("arial", size)
+    text_surface = font.render(text, True, colour)
+    text_rect = text_surface.get_rect()
+    text_rect.midtop = (x, y)
+    screen.blit(text_surface, text_rect)
+
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 bullet = 0
 balls = []
+score = 0
 
 clock = pygame.time.Clock()
 gun = Gun()
@@ -176,6 +199,7 @@ while not finished:
     screen.fill(WHITE)
     gun.draw()
     target.draw()
+    draw_text(str(score), 50, 50, 50, RED )
     for b in balls:
         b.draw()
     pygame.display.flip()
@@ -193,10 +217,11 @@ while not finished:
 
     for b in balls:
         b.move()
-        if b.hittest(target) and target.live:
-            target.live = 0
+        if b.hittest(target):
             target.hit()
-            target.new_target()
+            balls.remove(b)
+        elif b.should_del():
+            balls.remove(b)
     gun.power_up()
 
 pygame.quit()
