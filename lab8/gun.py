@@ -23,12 +23,13 @@ HEIGHT = 600
 
 
 class Ball:
-    def __init__(self, speed, an,  x=20, y=450, r=10):
+    def __init__(self, speed, an,  x=40, y=450, r=10, damag=1):
         """ Конструктор класса ball
         Args:
         x - начальное положение мяча по горизонтали
         y - начальное положение мяча по вертикали
         """
+        self.damage = damag
         self.radius = r
         self.x = x
         self.y = y
@@ -91,6 +92,7 @@ class Gun:
         self.an = ang
         self.last_shoot = 0
         self.bullets = 10000
+        self.speed = 0
 
     def fire2_start(self):
         self.f2_on = 1
@@ -99,13 +101,20 @@ class Gun:
         self.f2_on = 0
         self.f2_power = 10
 
-    def targetting(self, event):
+    def move(self):
+        self.y += self.speed
+        if self.y > 500:
+            self.y = 500
+        if self.y < 100:
+            self.y = 100 
+        self.speed = 0
+
+    def targetting(self, x, y):
         """Прицеливание. Зависит от положения мыши."""
-        if event:
-            if (event.pos[0]-self.x) != 0:
-                self.an = math.atan((event.pos[1]-self.y) / (event.pos[0]-self.x))
-            else:
-                self.an = math.pi / 2
+        if (x-self.x) != 0:
+            self.an = math.atan((y-self.y) / (x-self.x))
+        else:
+            self.an = math.pi / 2
         
     def change_type(self, event):
         global gun
@@ -118,7 +127,7 @@ class Gun:
             self.tip = 0
         elif self.tip > 2:
             self.tip = 2
-        gun = GUN_TIPS[str(self.tip)](ang=self.an, tip=self.tip)
+        gun = GUN_TIPS[str(self.tip)](x=self.x, y=self.y, ang=self.an, tip=self.tip)
     
     def power_up(self):
         if self.f2_on:
@@ -134,7 +143,7 @@ class Canon(Gun):
         Начальные значения компонент скорости мяча vx и vy зависят от положения мыши.
         """
         global balls
-        new_ball = Ball(self.f2_power, self.an)
+        new_ball = Ball(self.f2_power, self.an, x=self.x, y=self.y, damag=4)
         balls.append(new_ball)
         self.set_defolt()
 
@@ -169,7 +178,7 @@ class Shootgun(Gun):
             self.last_shoot = now
             for i in range(self.f2_power // 5):
                 ang = self.an + (random.random() - 0.5) * self.f2_power / 200
-                new_ball = Ball(random.randint(50, 100), ang, r=3)
+                new_ball = Ball(random.randint(50, 100), ang, x=self.x, y=self.y, r=3)
                 balls.append(new_ball)
     
         self.set_defolt()
@@ -225,7 +234,7 @@ class Minigun(Gun):
             self.bullets -= 1
             self.last_shoot = now
             ang = self.an + (random.random() - 0.5) * self.f2_power / 500
-            new_ball = Ball(80, ang, r=5)
+            new_ball = Ball(80, ang, x=self.x, y=self.y, r=5)
             balls.append(new_ball)
 
 class Target:
@@ -239,7 +248,7 @@ class Target:
 
     def new_target(self):
         """ Инициализация новой цели. """
-        self.hp = random.randint(1, 3)
+        self.hp = random.randint(3, 8)
         self.x = random.randint(600, 780)
         self.y = random.randint(100, 500)
         self.r = random.randint(5, 50)
@@ -320,7 +329,7 @@ for i in range(2):
     mini_imgs[i].set_colorkey(WHITE)
 
 clock = pygame.time.Clock()
-gun = Shootgun()
+gun = Canon()
 target.append(Target())
 target.append(Target())
 finished = False
@@ -332,21 +341,25 @@ while not finished:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             finished = True
-        elif event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == pygame.MOUSEBUTTONDOWN:
             gun.fire2_start()
-        elif event.type == pygame.MOUSEBUTTONUP:
+        if event.type == pygame.MOUSEBUTTONUP:
             gun.fire2_end()
-        elif event.type == pygame.MOUSEMOTION:
-            gun.targetting(event)
-        elif event.type == pygame.KEYDOWN:
+        if event.type == pygame.KEYDOWN:
             gun.change_type(event)
-
+    gun.targetting(*pygame.mouse.get_pos())
+    keystate = pygame.key.get_pressed()
+    if keystate[pygame.K_DOWN]:
+        gun.speed += 1
+    if keystate[pygame.K_UP]:
+        gun.speed -= 1
+    gun.move()
     for b in balls:
         b.move()
         rem = False
         for t in target:
             if b.hittest(t) and (not rem) :
-                t.hit()
+                t.hit(b.damage)
                 rem = True
         if b.should_del():
             rem = True
