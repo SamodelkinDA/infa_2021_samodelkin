@@ -17,11 +17,8 @@ GREY = (125, 125, 125)
 GAME_COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 
 
-WIDTH = 800
+WIDTH = 1400
 HEIGHT = 600
-
-pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 class Ball:
     def __init__(self, speed, an,  x=40, y=450, r=10, damag=1):
@@ -113,19 +110,19 @@ class Gun:
 
     def move(self):
         """Перемещение пушки по вертикали"""
-        self.y += self.speed
-        if self.y > 500:
-            self.y = 500
-        if self.y < 100:
-            self.y = 100 
+        self.x -= self.speed
+        if self.x > WIDTH:
+            self.x = WIDTH
+        if self.x < 10:
+            self.x = 10
         self.speed = 0
 
     def targetting(self, x, y):
         """Прицеливание. Зависит от положения мыши."""
-        if (x-self.x) != 0:
-            self.an = math.atan((y-self.y) / (x-self.x))
+        if (y-self.y) != 0:
+            self.an = 3 * math.pi / 2 -  math.atan((x-self.x) / (y-self.y))
         else:
-            self.an = math.pi / 2
+            self.an = 0
         
     def change_type(self, k):
         self.tip += k
@@ -144,7 +141,7 @@ class Gun:
                 self.f2_power += 1
 
 class Canon(Gun):
-    def __init__(self, x=40, y=450, ang=0):
+    def __init__(self, x=40, y=480, ang=0):
         """ Создание объекта CANON
         Вызывает инициализатор родительского класса"""
         Gun.__init__(self, x, y, ang)
@@ -178,7 +175,7 @@ class Canon(Gun):
 
 class Shootgun(Gun):
     DELAY = 1000
-    def __init__(self, x=40, y=450, ang=0):
+    def __init__(self, x=40, y=480, ang=0):
         """ Создание объекта SHOOTGUN 
         Вызывает инициализатор родительского класса"""
         Gun.__init__(self, x, y, ang)
@@ -215,7 +212,7 @@ class Shootgun(Gun):
         pass
 
 class Minigun(Gun):
-    def __init__(self, x=40, y=450, ang=0):
+    def __init__(self, x=40, y=480, ang=0):
         """ Создание объекта MINIGUN 
         Вызывает инициализатор родительского класса"""
         Gun.__init__(self, x, y, ang)
@@ -261,7 +258,7 @@ class Minigun(Gun):
 class Target:
     def __init__(self):
         """Создание новой цели."""
-        self.img = pygame.Surface((100, 100), pygame.SRCALPHA)
+        self.img = pygame.Surface((400, 400), pygame.SRCALPHA)
         self.new_target()
 
     def new_target(self):
@@ -274,29 +271,14 @@ class Target:
         self.img.fill((0, 0, 0, 0))
         pygame.draw.circle(self.img, self.color, (50, 50), self.r)
 
-    def hit(self, points=1):
+    def hit(self, points):
         """Попадание шарика в цель.
         При попаданиях на цель накладываются изображения трещин.
         Points - урон наносимый цели"""
-        global score
         self.hp -= points
-        crack = pygame.transform.rotate(
-            pygame.transform.scale(
-                random.choice(Game.crack_imgs), (4 * self.r, 4 * self.r)
-            ), random.randint(0, 359)
-        )
-        crack_rect = crack.get_rect()
-        self.img.blit(crack, (50 - crack_rect.width / 2, 50 - crack_rect.height / 2))
         if self.hp <= 0:
             self.new_target()
             Game.score += 1
-
-    def move(self):
-        """ Задает движения шариков. Пока что это броуновское движение """
-        self.x += random.randint(-2, 2) * 60 / FPS
-        self.y += random.randint(-2, 2) * 60 / FPS
-        if not ((500 < self.x < 780) and (100 < self.y < 500)):
-            self.new_target()
 
     def get_param(self):
         """Возвращает нужные параметры x, y, r"""
@@ -305,6 +287,47 @@ class Target:
     def draw(self):
         """ Отрисовка цели """
         screen.blit(self.img, (self.x - 50, self.y - 50))
+
+class Broun(Target):
+    def move(self):
+        """ Задает движения шариков. Пока что это броуновское движение """
+        self.x += random.randint(-5, 5) * 60 / FPS
+        self.y += random.randint(-5, 5) * 60 / FPS
+        if not ((50 < self.x < WIDTH - 50) and (50 < self.y < 450)):
+            self.new_target()
+    
+    def hit(self, point=1):
+        Target.hit(self, point)
+        crack = pygame.transform.rotate(
+            pygame.transform.scale(
+                random.choice(Game.crack_imgs), (4 * self.r, 4 * self.r)
+            ), random.randint(0, 359)
+        )
+        crack_rect = crack.get_rect()
+        self.img.blit(crack, (50 - crack_rect.width / 2, 50 - crack_rect.height / 2))
+
+class Bomber(Target):
+    def new_target(self):
+        self.hp = random.randint(10, 20)
+        self.y = random.randint(100, 300)
+        self.r = 25
+        self.zn =  random.randint(0, 1) * 2 - 1
+        self.speed_x = random.randint(5, 7) * self.zn
+        self.x = WIDTH * (1 - self.zn) / 2
+        self.img.fill((0, 0, 0, 0))
+        if self.zn < 0:
+            self.img.blit(Game.bomber_img, (0, 0))
+        else:
+            self.img.blit(pygame.transform.flip(Game.bomber_img, True, False),(0, 0))
+        #pygame.draw.circle(self.img, RED, (50, 50), self.r)
+
+    def move(self):
+        """ Задает движения шариков. Пока что это броуновское движение """
+        self.x += self.speed_x * 60 / FPS
+        self.y += 0 * 60 / FPS
+        if not (0 < self.x < WIDTH) :
+            self.x = WIDTH * (1 - self.zn) / 2
+            self.y = random.randint(100, 300)
 
 class Game():
     GUN_TIPS = {"0": Canon,
@@ -332,11 +355,12 @@ class Game():
         Game.score = 0
         self.clock = pygame.time.Clock()
         Game.gun = Canon()
-        self.targets.append(Target())
-        self.targets.append(Target())
+        self.targets.append(Broun())
+        self.targets.append(Bomber())
         finished = False
         while not finished:
             screen.fill(WHITE)
+            pygame.draw.rect(screen, GREY, [0, 500, WIDTH, 100])
             self.clock.tick(FPS)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -379,6 +403,10 @@ class Game():
             self.gun.power_up()
 
     def load_imgs(self):
+        Game.bomber_img = pygame.transform.scale(pygame.image.load(pathlib.Path(
+                pathlib.Path.home(),"infa_2021_samodelkin", "lab8", "images", 'bomber.png'
+                )), (100, 100)).convert()
+        Game.bomber_img.set_colorkey(WHITE)
         for i in range(14):
             Game.canon_imgs.append(pygame.transform.scale(pygame.image.load(pathlib.Path(
                 pathlib.Path.home(),"infa_2021_samodelkin", "lab8", "images", 'cannon{}.png'.format(i)
@@ -411,6 +439,8 @@ def draw_text(text, size, x, y, colour):
     text_rect.midtop = (x, y)
     screen.blit(text_surface, text_rect)
 
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 Game()
 
