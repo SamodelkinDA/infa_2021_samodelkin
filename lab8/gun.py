@@ -17,7 +17,6 @@ GREY = (125, 125, 125)
 GAME_COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 
 
-
 WIDTH = 800
 HEIGHT = 600
 
@@ -26,8 +25,12 @@ class Ball:
     def __init__(self, speed, an,  x=40, y=450, r=10, damag=1):
         """ Конструктор класса ball
         Args:
+        speed - Начальная скорость вылета шарика 
+        an - Угол вылета шарика
         x - начальное положение мяча по горизонтали
         y - начальное положение мяча по вертикали
+        r - 
+        damag - урон наносимый данным шариком цели
         """
         self.damage = damag
         self.radius = r
@@ -40,10 +43,10 @@ class Ball:
 
     def move(self):
         """Переместить мяч по прошествии единицы времени.
-
         Метод описывает перемещение мяча за один кадр перерисовки. То есть, обновляет значения
         self.x и self.y с учетом скоростей self.vx и self.vy, силы гравитации, действующей на мяч,
         и стен по краям окна (размер окна 800х600).
+        Также ведется счетчик времени для уничтожения шарика по прошествии 3 секунд
         """
         if self.y > 500: 
             self.vy *= -0.8
@@ -59,6 +62,9 @@ class Ball:
         self.live -= 1
 
     def should_del(self):
+        """ ФУнкция возвращает надо ли перестать обрабатывать данный шарик - 
+        Прошло ли время его жизни
+        """
         return self.live < 0
 
     def draw(self):
@@ -78,11 +84,12 @@ class Ball:
             Возвращает True в случае столкновения мяча и цели. В противном случае возвращает False.
         """
         x, y, r = obj.get_param()
-        if (x - self.x) ** 2 + (y - self.y) ** 2 < (self.radius + r) ** 2:
-            return True
-        return False
+        return (x - self.x) ** 2 + (y - self.y) ** 2 < (self.radius + r) ** 2
 
 class Gun:
+    """ Недокласс, использует параметры своих наследников.
+    САМОСТОЯТЕЛЬНОГО ВЫЗОВА НЕ ПОДРАЗУМЕВАЕТ
+    """
     def __init__(self, x=40, y=450, ang=0, tip=0):
         self.x = x
         self.y = y
@@ -91,17 +98,18 @@ class Gun:
         self.f2_on = 0
         self.an = ang
         self.last_shoot = 0
-        self.bullets = 10000
         self.speed = 0
 
     def fire2_start(self):
         self.f2_on = 1
 
     def set_defolt(self):
+        """ Устанавливает эти параметры на начальные значения"""
         self.f2_on = 0
         self.f2_power = 10
 
     def move(self):
+        """Перемещение пушки по вертикали"""
         self.y += self.speed
         if self.y > 500:
             self.y = 500
@@ -133,9 +141,13 @@ class Gun:
         if self.f2_on:
             if self.f2_power < 100:
                 self.f2_power += 1
-        self.shooting()
 
 class Canon(Gun):
+    def __init__(self, x=40, y=450, ang=0, tip=0):
+        """ Создание объекта CANON
+        Вызывает инициализатор родительского класса"""
+        Gun.__init__(self, x, y, ang, tip=0)
+
     def fire2_end(self):
         """Выстрел мячом.
 
@@ -148,11 +160,8 @@ class Canon(Gun):
         self.set_defolt()
 
     def draw(self):
-        # FIXIT don't know how to do it - FIXED
         """
-        self.surf_orig = pygame.Surface((200, 200), pygame.SRCALPHA)
-        self.surf_orig.fill((0, 0, 0, 0))
-        pygame.draw.rect(self.surf, self.color , [100 , 95, 30 + self.f2_power / 2, 10])
+        Орисовка пушки.
         """
         self.surf = pygame.transform.rotate(
             canon_imgs[self.f2_power // 7 - 1], - self.an * 180 / math.pi
@@ -162,33 +171,35 @@ class Canon(Gun):
             self.x - self.surf_rect.width / 2,
             self.y - self.surf_rect.height / 2
             ))
+
     def shooting(self):
         pass
 
 class Shootgun(Gun):
-    def fire2_end(self):
-        """Выстрел мячом.
+    DELAY = 1000
+    def __init__(self, x=40, y=450, ang=0, tip=2):
+        """ Создание объекта SHOOTGUN 
+        Вызывает инициализатор родительского класса"""
+        Gun.__init__(self, x, y, ang, tip=2)
 
+    def fire2_end(self):
+        """Выстрел картечью.
         Происходит при отпускании кнопки мыши.
-        Начальные значения компонент скорости мяча vx и vy зависят от положения мыши.
+        Начальные значения компонент скорости картечи vx и vy зависят от положения мыши
+        и случайной добавки разброса.
         """
         global balls
         now = pygame.time.get_ticks()
-        if now - self.last_shoot > 2000:
+        if now - self.last_shoot > self.DELAY:
             self.last_shoot = now
             for i in range(self.f2_power // 5):
                 ang = self.an + (random.random() - 0.5) * self.f2_power / 200
                 new_ball = Ball(random.randint(50, 100), ang, x=self.x, y=self.y, r=3)
                 balls.append(new_ball)
-    
         self.set_defolt()
 
     def draw(self):
-        # FIXIT don't know how to do it - FIXED
-        """
-        self.surf_orig = pygame.Surface((200, 200), pygame.SRCALPHA)
-        self.surf_orig.fill((0, 0, 0, 0))
-        pygame.draw.rect(self.surf, self.color , [100 , 95, 30 + self.f2_power / 2, 10])
+        """ Отрисовка картечницы.
         """
         self.surf = pygame.transform.rotate(
             canon_imgs[self.f2_power // 7 - 1], - self.an * 180 / math.pi
@@ -203,20 +214,20 @@ class Shootgun(Gun):
         pass
 
 class Minigun(Gun):
-    def fire2_end(self):
-        """Выстрел мячом.
+    def __init__(self, x=40, y=450, ang=0, tip=1):
+        """ Создание объекта MINIGUN 
+        Вызывает инициализатор родительского класса"""
+        Gun.__init__(self, x, y, ang, tip=1)
+        self.heat = 0
+        self.bullets = 10000
 
-        Происходит при отпускании кнопки мыши.
-        Начальные значения компонент скорости мяча vx и vy зависят от положения мыши.
-        """
+    def fire2_end(self):
+        """Окончание стрельбы."""
         self.set_defolt()
 
     def draw(self):
-        # FIXIT don't know how to do it - FIXED
         """
-        self.surf_orig = pygame.Surface((200, 200), pygame.SRCALPHA)
-        self.surf_orig.fill((0, 0, 0, 0))
-        pygame.draw.rect(self.surf, self.color , [100 , 95, 30 + self.f2_power / 2, 10])
+        Рисует миниган. Смена картинки происходит циклически при выстрелах.
         """
         self.surf = pygame.transform.rotate(
             mini_imgs[self.bullets % 2], - self.an * 180 / math.pi
@@ -226,28 +237,34 @@ class Minigun(Gun):
             self.x - self.surf_rect.width / 2,
             self.y - self.surf_rect.height / 2
             ))
+        pygame.draw.rect(screen, BLUE, [20, 20 , 100, 5])
+        pygame.draw.rect(screen, RED, [20, 20 , 2 * self.heat, 5])
 
     def shooting(self):
         global balls
         now = pygame.time.get_ticks()
-        if now - self.last_shoot > 500000 / self.f2_power ** 2 and self.f2_on:
-            self.bullets -= 1
+        if now - self.last_shoot > 500000 / self.f2_power ** 2 and self.f2_on and self.heat < 50:
+            self.heat += 1
             self.last_shoot = now
+            self.bullets -= 1
             ang = self.an + (random.random() - 0.5) * self.f2_power / 500
             new_ball = Ball(80, ang, x=self.x, y=self.y, r=5)
             balls.append(new_ball)
+        if self.f2_on:
+            self.heat -= 0.1
+        else:
+            self.heat -= 0.1
+        if self.heat < 0:
+            self.heat = 0
 
 class Target:
-    # self.points = 0
-    # self.live = 1
-    # FIXME: don't work!!! How to call this functions when object is created?
-    # self.new_target()
     def __init__(self):
+        """Создание новой цели."""
         self.img = pygame.Surface((100, 100), pygame.SRCALPHA)
         self.new_target()
 
     def new_target(self):
-        """ Инициализация новой цели. """
+        """ Задание положения и параметров новой цели. """
         self.hp = random.randint(3, 8)
         self.x = random.randint(600, 780)
         self.y = random.randint(100, 500)
@@ -257,8 +274,10 @@ class Target:
         pygame.draw.circle(self.img, self.color, (50, 50), self.r)
 
     def hit(self, points=1):
-        """Попадание шарика в цель."""
-        global score, gun
+        """Попадание шарика в цель.
+        При попаданиях на цель накладываются изображения трещин.
+        Points - урон наносимый цели"""
+        global score
         self.hp -= points
         crack = pygame.transform.rotate(
             pygame.transform.scale(
@@ -272,19 +291,25 @@ class Target:
             score += 1
 
     def move(self):
+        """ Задает движения шариков. Пока что это броуновское движение """
         self.x += random.randint(-2, 2) * 60 / FPS
         self.y += random.randint(-2, 2) * 60 / FPS
         if not ((500 < self.x < 780) and (100 < self.y < 500)):
+            #self.x , self.y = 700, 300
             self.new_target()
 
     def get_param(self):
+        """Возвращает нужные параметры x, y, r"""
         return self.x, self.y, self.r
 
     def draw(self):
+        """ Отрисовка цели """
         screen.blit(self.img, (self.x - 50, self.y - 50))
         #pygame.draw.circle(screen, self.color, (self.x, self.y), self.r)
 
 def random_colour():
+    """ Функция возвращает кортеж из трех случайных чисел от 20 до 240,
+    задающих некоторый случайный цвет"""
     return tuple( [random.randint(20, 240) for i in range(3)])
 
 def draw_text(text, size, x, y, colour):
@@ -303,8 +328,11 @@ GUN_TIPS = {"0": Canon,
             "2": Shootgun
         }
 
+
+
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
+
 balls = []
 target = []
 score = 0
@@ -372,6 +400,7 @@ while not finished:
     gun.draw()
     draw_text(str(score), 50, 50, 50, RED )
     pygame.display.flip()
+    gun.shooting()
     gun.power_up()
 
 
