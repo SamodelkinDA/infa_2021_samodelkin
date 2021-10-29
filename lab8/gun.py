@@ -20,6 +20,8 @@ GAME_COLORS = [RED, BLUE, YELLOW, GREEN, MAGENTA, CYAN]
 WIDTH = 800
 HEIGHT = 600
 
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 class Ball:
     def __init__(self, speed, an,  x=40, y=450, r=10, damag=1):
@@ -40,6 +42,7 @@ class Ball:
         self.live = FPS * 3
         self.vx = speed * math.cos(an)
         self.vy = speed * math.sin(an)
+        Game.balls.append(self)
 
     def move(self):
         """Переместить мяч по прошествии единицы времени.
@@ -90,10 +93,10 @@ class Gun:
     """ Недокласс, использует параметры своих наследников.
     САМОСТОЯТЕЛЬНОГО ВЫЗОВА НЕ ПОДРАЗУМЕВАЕТ
     """
-    def __init__(self, x=40, y=450, ang=0, tip=0):
+    def __init__(self, x=40, y=450, ang=0):
         self.x = x
         self.y = y
-        self.tip = tip
+        
         self.f2_power = 10
         self.f2_on = 0
         self.an = ang
@@ -124,29 +127,29 @@ class Gun:
         else:
             self.an = math.pi / 2
         
-    def change_type(self, event):
-        global gun
-        
-        if event.key == pygame.K_LEFT:
-            self.tip -= 1
-        if event.key == pygame.K_RIGHT:
-            self.tip += 1
+    def change_type(self, k):
+        self.tip += k
         if self.tip < 0:
             self.tip = 0
         elif self.tip > 2:
             self.tip = 2
-        gun = GUN_TIPS[str(self.tip)](x=self.x, y=self.y, ang=self.an, tip=self.tip)
+        Game.gun = Game.GUN_TIPS[str(self.tip)](x=self.x, y=self.y, ang=self.an)
     
+    def set_speed(self, speed):
+        self.speed += speed
+
     def power_up(self):
         if self.f2_on:
             if self.f2_power < 100:
                 self.f2_power += 1
 
 class Canon(Gun):
-    def __init__(self, x=40, y=450, ang=0, tip=0):
+    def __init__(self, x=40, y=450, ang=0):
         """ Создание объекта CANON
         Вызывает инициализатор родительского класса"""
-        Gun.__init__(self, x, y, ang, tip=0)
+        Gun.__init__(self, x, y, ang)
+        self.tip = 0
+        #self.change_type(1)
 
     def fire2_end(self):
         """Выстрел мячом.
@@ -154,9 +157,7 @@ class Canon(Gun):
         Происходит при отпускании кнопки мыши.
         Начальные значения компонент скорости мяча vx и vy зависят от положения мыши.
         """
-        global balls
-        new_ball = Ball(self.f2_power, self.an, x=self.x, y=self.y, damag=4)
-        balls.append(new_ball)
+        Ball(self.f2_power, self.an, x=self.x, y=self.y, damag=4)
         self.set_defolt()
 
     def draw(self):
@@ -164,7 +165,7 @@ class Canon(Gun):
         Орисовка пушки.
         """
         self.surf = pygame.transform.rotate(
-            canon_imgs[self.f2_power // 7 - 1], - self.an * 180 / math.pi
+            Game.canon_imgs[self.f2_power // 7 - 1], - self.an * 180 / math.pi
             )
         self.surf_rect = self.surf.get_rect()
         screen.blit(self.surf, (
@@ -177,10 +178,11 @@ class Canon(Gun):
 
 class Shootgun(Gun):
     DELAY = 1000
-    def __init__(self, x=40, y=450, ang=0, tip=2):
+    def __init__(self, x=40, y=450, ang=0):
         """ Создание объекта SHOOTGUN 
         Вызывает инициализатор родительского класса"""
-        Gun.__init__(self, x, y, ang, tip=2)
+        Gun.__init__(self, x, y, ang)
+        self.tip = 2
 
     def fire2_end(self):
         """Выстрел картечью.
@@ -194,15 +196,14 @@ class Shootgun(Gun):
             self.last_shoot = now
             for i in range(self.f2_power // 5):
                 ang = self.an + (random.random() - 0.5) * self.f2_power / 200
-                new_ball = Ball(random.randint(50, 100), ang, x=self.x, y=self.y, r=3)
-                balls.append(new_ball)
+                Ball(random.randint(50, 100), ang, x=self.x, y=self.y, r=3)
         self.set_defolt()
 
     def draw(self):
         """ Отрисовка картечницы.
         """
         self.surf = pygame.transform.rotate(
-            canon_imgs[self.f2_power // 7 - 1], - self.an * 180 / math.pi
+            Game.canon_imgs[self.f2_power // 7 - 1], - self.an * 180 / math.pi
             )
         self.surf_rect = self.surf.get_rect()
         screen.blit(self.surf, (
@@ -214,10 +215,11 @@ class Shootgun(Gun):
         pass
 
 class Minigun(Gun):
-    def __init__(self, x=40, y=450, ang=0, tip=1):
+    def __init__(self, x=40, y=450, ang=0):
         """ Создание объекта MINIGUN 
         Вызывает инициализатор родительского класса"""
-        Gun.__init__(self, x, y, ang, tip=1)
+        Gun.__init__(self, x, y, ang)
+        self.tip = 1
         self.heat = 0
         self.bullets = 10000
 
@@ -230,7 +232,7 @@ class Minigun(Gun):
         Рисует миниган. Смена картинки происходит циклически при выстрелах.
         """
         self.surf = pygame.transform.rotate(
-            mini_imgs[self.bullets % 2], - self.an * 180 / math.pi
+            Game.mini_imgs[self.bullets % 2], - self.an * 180 / math.pi
             )
         self.surf_rect = self.surf.get_rect()
         screen.blit(self.surf, (
@@ -248,8 +250,7 @@ class Minigun(Gun):
             self.last_shoot = now
             self.bullets -= 1
             ang = self.an + (random.random() - 0.5) * self.f2_power / 500
-            new_ball = Ball(80, ang, x=self.x, y=self.y, r=5)
-            balls.append(new_ball)
+            Ball(80, ang, x=self.x, y=self.y, r=5)
         if self.f2_on:
             self.heat -= 0.1
         else:
@@ -281,21 +282,20 @@ class Target:
         self.hp -= points
         crack = pygame.transform.rotate(
             pygame.transform.scale(
-                random.choice(crack_imgs), (4 * self.r, 4 * self.r)
+                random.choice(Game.crack_imgs), (4 * self.r, 4 * self.r)
             ), random.randint(0, 359)
         )
         crack_rect = crack.get_rect()
         self.img.blit(crack, (50 - crack_rect.width / 2, 50 - crack_rect.height / 2))
         if self.hp <= 0:
             self.new_target()
-            score += 1
+            Game.score += 1
 
     def move(self):
         """ Задает движения шариков. Пока что это броуновское движение """
         self.x += random.randint(-2, 2) * 60 / FPS
         self.y += random.randint(-2, 2) * 60 / FPS
         if not ((500 < self.x < 780) and (100 < self.y < 500)):
-            #self.x , self.y = 700, 300
             self.new_target()
 
     def get_param(self):
@@ -305,7 +305,96 @@ class Target:
     def draw(self):
         """ Отрисовка цели """
         screen.blit(self.img, (self.x - 50, self.y - 50))
-        #pygame.draw.circle(screen, self.color, (self.x, self.y), self.r)
+
+class Game():
+    GUN_TIPS = {"0": Canon,
+            "1": Minigun,
+            "2": Shootgun
+        }
+    balls = []
+    targets = []
+    score = 0
+    gun = None
+    canon_imgs = []
+    mini_imgs = []
+    crack_imgs = []
+
+    def __init__(self):
+        self.load_imgs()
+        self.menu()
+        
+    def menu(self):
+        self.new_game()
+
+    def new_game(self):
+        Game.balls = []
+        Game.targets = []
+        Game.score = 0
+        self.clock = pygame.time.Clock()
+        Game.gun = Canon()
+        self.targets.append(Target())
+        self.targets.append(Target())
+        finished = False
+        while not finished:
+            screen.fill(WHITE)
+            self.clock.tick(FPS)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    finished = True
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    self.gun.fire2_start()
+                if event.type == pygame.MOUSEBUTTONUP:
+                    self.gun.fire2_end()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_LEFT:
+                        self.gun.change_type(-1)
+                    if event.key == pygame.K_RIGHT:
+                        self.gun.change_type(1)
+            self.gun.targetting(*pygame.mouse.get_pos())
+            keystate = pygame.key.get_pressed()
+            if keystate[pygame.K_DOWN]:
+                self.gun.set_speed(1)
+            if keystate[pygame.K_UP]:
+                self.gun.set_speed(-1)
+            self.gun.move()
+            for b in self.balls:
+                b.move()
+                rem = False
+                for t in self.targets:
+                    if b.hittest(t) and (not rem) :
+                        t.hit(b.damage)
+                        rem = True
+                if b.should_del():
+                    rem = True
+                if rem == True:
+                    self.balls.remove(b)
+                b.draw()
+            for t in self.targets:
+                t.move()
+                t.draw()
+            self.gun.draw()
+            draw_text(str(self.score), 50, 50, 50, RED )
+            pygame.display.flip()
+            self.gun.shooting()
+            self.gun.power_up()
+
+    def load_imgs(self):
+        for i in range(14):
+            Game.canon_imgs.append(pygame.transform.scale(pygame.image.load(pathlib.Path(
+                pathlib.Path.home(),"infa_2021_samodelkin", "lab8", "images", 'cannon{}.png'.format(i)
+                )), (150, 150)).convert())
+            Game.canon_imgs[i].set_colorkey(WHITE)
+        
+        for i in range(2):
+            Game.mini_imgs.append(pygame.transform.scale(pygame.image.load(pathlib.Path(
+                pathlib.Path.home(),"infa_2021_samodelkin", "lab8", "images", 'minigun{}.png'.format(i)
+                )), (200, 200)).convert())
+            Game.mini_imgs[i].set_colorkey(WHITE)
+        for i in range(3):
+            Game.crack_imgs.append(pygame.transform.scale(pygame.image.load(pathlib.Path(
+                pathlib.Path.home(),"infa_2021_samodelkin", "lab8", "images", 'crack{}.png'.format(i)
+                )), (400, 400)).convert())
+            Game.crack_imgs[i].set_colorkey(WHITE)
 
 def random_colour():
     """ Функция возвращает кортеж из трех случайных чисел от 20 до 240,
@@ -323,85 +412,6 @@ def draw_text(text, size, x, y, colour):
     screen.blit(text_surface, text_rect)
 
 
-GUN_TIPS = {"0": Canon,
-            "1": Minigun,
-            "2": Shootgun
-        }
-
-
-
-pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-
-balls = []
-target = []
-score = 0
-
-canon_imgs = []
-for i in range(14):
-    canon_imgs.append(pygame.transform.scale(pygame.image.load(pathlib.Path(
-        pathlib.Path.home(),"infa_2021_samodelkin", "lab8", "images", 'cannon{}.png'.format(i)
-        )), (150, 150)).convert())
-    canon_imgs[i].set_colorkey(WHITE)
-crack_imgs = []
-for i in range(3):
-    crack_imgs.append(pygame.transform.scale(pygame.image.load(pathlib.Path(
-        pathlib.Path.home(),"infa_2021_samodelkin", "lab8", "images", 'crack{}.png'.format(i)
-        )), (400, 400)).convert())
-    crack_imgs[i].set_colorkey(WHITE)
-mini_imgs = []
-for i in range(2):
-    mini_imgs.append(pygame.transform.scale(pygame.image.load(pathlib.Path(
-        pathlib.Path.home(),"infa_2021_samodelkin", "lab8", "images", 'minigun{}.png'.format(i)
-        )), (200, 200)).convert())
-    mini_imgs[i].set_colorkey(WHITE)
-
-clock = pygame.time.Clock()
-gun = Canon()
-target.append(Target())
-target.append(Target())
-finished = False
-
-
-while not finished:
-    screen.fill(WHITE)
-    clock.tick(FPS)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            finished = True
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            gun.fire2_start()
-        if event.type == pygame.MOUSEBUTTONUP:
-            gun.fire2_end()
-        if event.type == pygame.KEYDOWN:
-            gun.change_type(event)
-    gun.targetting(*pygame.mouse.get_pos())
-    keystate = pygame.key.get_pressed()
-    if keystate[pygame.K_DOWN]:
-        gun.speed += 1
-    if keystate[pygame.K_UP]:
-        gun.speed -= 1
-    gun.move()
-    for b in balls:
-        b.move()
-        rem = False
-        for t in target:
-            if b.hittest(t) and (not rem) :
-                t.hit(b.damage)
-                rem = True
-        if b.should_del():
-            rem = True
-        if rem == True:
-            balls.remove(b)
-        b.draw()
-    for t in target:
-        t.move()
-        t.draw()
-    gun.draw()
-    draw_text(str(score), 50, 50, 50, RED )
-    pygame.display.flip()
-    gun.shooting()
-    gun.power_up()
-
+Game()
 
 pygame.quit()
